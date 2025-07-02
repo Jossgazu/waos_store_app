@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "356543058846",
+    "project_id": "waos-store-3575c",
+    "storage_bucket": "waos-store-3575c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:356543058846:android:17e3fdad46e9c977453c8f",
+        "android_client_info": {
+          "package_name": "com.example.waos_store_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRFzR-oH8sONQ6H2kMEa_Ver9e83RbfZ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
