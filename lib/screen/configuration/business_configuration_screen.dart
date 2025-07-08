@@ -25,9 +25,6 @@ class _BusinessConfigurationScreenState
   bool _isLoadingUsuarios = false;
   List<dynamic> _usuarios = [];
 
-  // bool _isLoadingRoles = false;
-  // List<dynamic> _roles = [];
-
   bool _isLoadingProveedores = false;
   List<dynamic> _proveedores = [];
 
@@ -64,7 +61,6 @@ class _BusinessConfigurationScreenState
       _loadProductos(),
       _loadSucursales(),
       _loadUsuarios(),
-      // _loadRoles(),
       _loadProveedores(),
       _loadMetodosPago(),
       _loadEmpresas(),
@@ -76,8 +72,6 @@ class _BusinessConfigurationScreenState
     ]);
   }
 
-  // Métodos de carga para cada entidad
-
   Future<void> _loadCategorias() async {
     setState(() => _isLoadingCategorias = true);
     try {
@@ -88,9 +82,9 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingCategorias = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar categorías: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar categorías: $e')));
     }
   }
 
@@ -104,9 +98,9 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingProductos = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar productos: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar productos: $e')));
     }
   }
 
@@ -120,9 +114,9 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingSucursales = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar sucursales: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar sucursales: $e')));
     }
   }
 
@@ -136,27 +130,11 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingUsuarios = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar usuarios: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar usuarios: $e')));
     }
   }
-
-  // Future<void> _loadRoles() async {
-  //   setState(() => _isLoadingRoles = true);
-  //   try {
-  //     final data = await ApiService.getData('rol');
-  //     setState(() {
-  //       _roles = data;
-  //       _isLoadingRoles = false;
-  //     });
-  //   } catch (e) {
-  //     setState(() => _isLoadingRoles = false);
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error al cargar roles: $e')),
-  //     );
-  //   }
-  // }
 
   Future<void> _loadProveedores() async {
     setState(() => _isLoadingProveedores = true);
@@ -200,9 +178,9 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingEmpresas = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar empresas: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar empresas: $e')));
     }
   }
 
@@ -248,9 +226,9 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingPagos = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar pagos: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar pagos: $e')));
     }
   }
 
@@ -264,9 +242,9 @@ class _BusinessConfigurationScreenState
       });
     } catch (e) {
       setState(() => _isLoadingInventario = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar inventario: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar inventario: $e')));
     }
   }
 
@@ -295,7 +273,7 @@ class _BusinessConfigurationScreenState
           endpoint: endpoint,
         ),
       ),
-    ).then((_) => _loadData()); // Recarga datos al volver
+    ).then((_) => _loadData());
   }
 
   String _getTitleFromEndpoint(String endpoint) {
@@ -308,8 +286,6 @@ class _BusinessConfigurationScreenState
         return 'Sucursal';
       case 'usuario':
         return 'Usuario';
-      // case 'rol':
-      //   return 'Rol';
       case 'proveedor':
         return 'Proveedor';
       case 'metodo-pago':
@@ -339,30 +315,86 @@ class _BusinessConfigurationScreenState
     required String idField,
   }) {
     return Card(
+      elevation: 3,
       margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
-        title: Text(title),
-        childrenPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.blueGrey,
+          ),
+        ),
+        collapsedBackgroundColor: Colors.grey[50],
+        backgroundColor: Colors.white,
+        childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
         children: [
           if (isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (items.isEmpty)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text('No hay registros.'),
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                ),
+              ),
+            )
+          else if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: Text(
+                'No hay registros.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             )
           else
-            ...items.map((item) => ListTile(
-                  title: Text(item['nombre'] ?? item['id'].toString()),
-                  subtitle: Text('ID: ${item[idField] ?? ''}'),
-                )),
+            ...items.map(
+              (item) => Card(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: Text(
+                    item['nombre'] ?? item['id'].toString(),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    'ID: ${item[idField] ?? ''}',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
               onPressed: onCrudPressed,
-              icon: const Icon(Icons.settings),
+              icon: const Icon(Icons.settings, size: 18),
               label: const Text('Gestionar'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+              ),
             ),
           ),
         ],
@@ -373,102 +405,116 @@ class _BusinessConfigurationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Configurar Empresa')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSection(
-            title: 'Categorías',
-            items: _categorias,
-            isLoading: _isLoadingCategorias,
-            onCrudPressed: () => _navigateToCrud(context, 'categoria'),
-            idField: 'id_categoria',
+      appBar: AppBar(
+        title: const Text(
+          'Configurar Empresa',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blueAccent.withOpacity(0.1), Colors.grey[50]!],
           ),
-          _buildSection(
-            title: 'Productos',
-            items: _productos,
-            isLoading: _isLoadingProductos,
-            onCrudPressed: () => _navigateToCrud(context, 'producto'),
-            idField: 'id_producto',
-          ),
-          _buildSection(
-            title: 'Sucursales',
-            items: _sucursales,
-            isLoading: _isLoadingSucursales,
-            onCrudPressed: () => _navigateToCrud(context, 'sucursal'),
-            idField: 'id_sucursal',
-          ),
-          _buildSection(
-            title: 'Usuarios',
-            items: _usuarios,
-            isLoading: _isLoadingUsuarios,
-            onCrudPressed: () => _navigateToCrud(context, 'usuario'),
-            idField: 'id_usuario',
-          ),
-          // _buildSection(
-          //   title: 'Roles',
-          //   items: _roles,
-          //   isLoading: _isLoadingRoles,
-          //   onCrudPressed: () => _navigateToCrud(context, 'rol'),
-          //   idField: 'id_rol',
-          // ),
-          _buildSection(
-            title: 'Proveedores',
-            items: _proveedores,
-            isLoading: _isLoadingProveedores,
-            onCrudPressed: () => _navigateToCrud(context, 'proveedor'),
-            idField: 'id_proveedor',
-          ),
-          _buildSection(
-            title: 'Métodos de Pago',
-            items: _metodosPago,
-            isLoading: _isLoadingMetodosPago,
-            onCrudPressed: () => _navigateToCrud(context, 'metodo-pago'),
-            idField: 'id_metodo_pago',
-          ),
-          _buildSection(
-            title: 'Empresas',
-            items: _empresas,
-            isLoading: _isLoadingEmpresas,
-            onCrudPressed: () => _navigateToCrud(context, 'empresa'),
-            idField: 'id_empresa',
-          ),
-          _buildSection(
-            title: 'Comprobantes de Cabecera',
-            items: _comprobantesCabecera,
-            isLoading: _isLoadingComprobantesCabecera,
-            onCrudPressed: () => _navigateToCrud(context, 'comprobante-cabecera'),
-            idField: 'id_comprobante_cabecera',
-          ),
-          _buildSection(
-            title: 'Comprobantes de Detalle',
-            items: _comprobantesDetalle,
-            isLoading: _isLoadingComprobantesDetalle,
-            onCrudPressed: () => _navigateToCrud(context, 'comprobante-detalle'),
-            idField: 'id_comprobante_detalle',
-          ),
-          _buildSection(
-            title: 'Pago',
-            items: _pagos,
-            isLoading: _isLoadingPagos,
-            onCrudPressed: () => _navigateToCrud(context, 'pago'),
-            idField: 'id_pago',
-          ),
-          _buildSection(
-            title: 'Inventario',
-            items: _inventario,
-            isLoading: _isLoadingInventario,
-            onCrudPressed: () => _navigateToCrud(context, 'inventario'),
-            idField: 'id_inventario',
-          ),
-          _buildSection(
-            title: 'Producto Variante',
-            items: _productoVariante,
-            isLoading: _isLoadingProductoVariante,
-            onCrudPressed: () => _navigateToCrud(context, 'producto-variante'),
-            idField: 'id_producto_variante',
-          ),
-        ],
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildSection(
+              title: 'Categorías',
+              items: _categorias,
+              isLoading: _isLoadingCategorias,
+              onCrudPressed: () => _navigateToCrud(context, 'categoria'),
+              idField: 'id_categoria',
+            ),
+            _buildSection(
+              title: 'Productos',
+              items: _productos,
+              isLoading: _isLoadingProductos,
+              onCrudPressed: () => _navigateToCrud(context, 'producto'),
+              idField: 'id_producto',
+            ),
+            _buildSection(
+              title: 'Sucursales',
+              items: _sucursales,
+              isLoading: _isLoadingSucursales,
+              onCrudPressed: () => _navigateToCrud(context, 'sucursal'),
+              idField: 'id_sucursal',
+            ),
+            _buildSection(
+              title: 'Usuarios',
+              items: _usuarios,
+              isLoading: _isLoadingUsuarios,
+              onCrudPressed: () => _navigateToCrud(context, 'usuario'),
+              idField: 'id_usuario',
+            ),
+            _buildSection(
+              title: 'Proveedores',
+              items: _proveedores,
+              isLoading: _isLoadingProveedores,
+              onCrudPressed: () => _navigateToCrud(context, 'proveedor'),
+              idField: 'id_proveedor',
+            ),
+            _buildSection(
+              title: 'Métodos de Pago',
+              items: _metodosPago,
+              isLoading: _isLoadingMetodosPago,
+              onCrudPressed: () => _navigateToCrud(context, 'metodo-pago'),
+              idField: 'id_metodo_pago',
+            ),
+            _buildSection(
+              title: 'Empresas',
+              items: _empresas,
+              isLoading: _isLoadingEmpresas,
+              onCrudPressed: () => _navigateToCrud(context, 'empresa'),
+              idField: 'id_empresa',
+            ),
+            _buildSection(
+              title: 'Comprobantes de Cabecera',
+              items: _comprobantesCabecera,
+              isLoading: _isLoadingComprobantesCabecera,
+              onCrudPressed: () =>
+                  _navigateToCrud(context, 'comprobante-cabecera'),
+              idField: 'id_comprobante_cabecera',
+            ),
+            _buildSection(
+              title: 'Comprobantes de Detalle',
+              items: _comprobantesDetalle,
+              isLoading: _isLoadingComprobantesDetalle,
+              onCrudPressed: () =>
+                  _navigateToCrud(context, 'comprobante-detalle'),
+              idField: 'id_comprobante_detalle',
+            ),
+            _buildSection(
+              title: 'Pagos',
+              items: _pagos,
+              isLoading: _isLoadingPagos,
+              onCrudPressed: () => _navigateToCrud(context, 'pago'),
+              idField: 'id_pago',
+            ),
+            _buildSection(
+              title: 'Inventario',
+              items: _inventario,
+              isLoading: _isLoadingInventario,
+              onCrudPressed: () => _navigateToCrud(context, 'inventario'),
+              idField: 'id_inventario',
+            ),
+            _buildSection(
+              title: 'Producto Variante',
+              items: _productoVariante,
+              isLoading: _isLoadingProductoVariante,
+              onCrudPressed: () =>
+                  _navigateToCrud(context, 'producto-variante'),
+              idField: 'id_producto_variante',
+            ),
+          ],
+        ),
       ),
     );
   }

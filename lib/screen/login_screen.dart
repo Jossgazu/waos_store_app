@@ -29,31 +29,26 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState?.validate() != true) return;
 
     setState(() => _isLoading = true);
-    
+
     try {
       final response = await AuthService.login(
         _dniController.text.trim(),
         _passwordController.text.trim(),
       );
 
-      // Guardar token y datos de usuario en SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', response['access_token']);
 
-      // Obtener datos completos del usuario
       final userData = await UserService.getUserByDni(
         _dniController.text.trim(),
         response['access_token'],
       );
-      
-      // Guardar datos importantes del usuario como string JSON
+
       await prefs.setString('userData', userData.toString());
 
-      // Navegar a home
       if (mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
-      
     } catch (e) {
       if (mounted) {
         _showErrorSnackbar(context, e);
@@ -65,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showErrorSnackbar(BuildContext context, dynamic error) {
     String errorMessage = 'Error de autenticación';
-    
+
     if (error is String) {
       errorMessage = error;
     } else if (error is Map<String, dynamic>) {
@@ -77,8 +72,10 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(errorMessage),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red[700],
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 4),
       ),
     );
@@ -88,34 +85,48 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Iniciar Sesión'),
+        title: const Text(
+          'Iniciar Sesión',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.blueAccent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Form(
-            key: _formKey,
-            child: AutofillGroup(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildLogo(),
-                  const SizedBox(height: 40),
-                  _buildDniField(),
-                  const SizedBox(height: 20),
-                  _buildPasswordField(),
-                  const SizedBox(height: 24),
-                  _buildLoginButton(),
-                  const SizedBox(height: 16),
-                  _buildForgotPasswordLink(),
-                  const SizedBox(height: 30),
-                  _buildDivider(),
-                  const SizedBox(height: 20),
-                  _buildRegisterButton(),
-                ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blueAccent.withOpacity(0.1), Colors.grey[50]!],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            child: Form(
+              key: _formKey,
+              child: AutofillGroup(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildLogo(),
+                    const SizedBox(height: 40),
+                    _buildDniField(),
+                    const SizedBox(height: 20),
+                    _buildPasswordField(),
+                    const SizedBox(height: 24),
+                    _buildLoginButton(),
+                    const SizedBox(height: 16),
+                    _buildForgotPasswordLink(),
+                    const SizedBox(height: 30),
+                    _buildDivider(),
+                    const SizedBox(height: 20),
+                    _buildRegisterButton(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -141,11 +152,17 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: TextInputType.number,
       textInputAction: TextInputAction.next,
       autofillHints: const [AutofillHints.username],
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'DNI',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.credit_card),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.white,
+        prefixIcon: const Icon(Icons.credit_card, color: Colors.blueGrey),
         hintText: 'Ingrese su DNI',
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Ingrese su DNI';
@@ -164,13 +181,22 @@ class _LoginScreenState extends State<LoginScreen> {
       onFieldSubmitted: (_) => _submitForm(),
       decoration: InputDecoration(
         labelText: 'Contraseña',
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.lock),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.white,
+        prefixIcon: const Icon(Icons.lock, color: Colors.blueGrey),
         suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: Colors.blueGrey,
+          ),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
         hintText: 'Ingrese su contraseña',
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Ingrese su contraseña';
@@ -185,9 +211,10 @@ class _LoginScreenState extends State<LoginScreen> {
       onPressed: _isLoading ? null : _submitForm,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.white,
+        elevation: 2,
       ),
       child: _isLoading
           ? const SizedBox(
@@ -200,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
             )
           : const Text(
               'INICIAR SESIÓN',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
     );
   }
@@ -210,10 +237,11 @@ class _LoginScreenState extends State<LoginScreen> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () => Navigator.pushNamed(context, AppRoutes.recover),
+        style: TextButton.styleFrom(padding: EdgeInsets.zero),
         child: const Text(
           '¿Olvidaste tu contraseña?',
           style: TextStyle(
-            color: Colors.blue,
+            color: Colors.blueAccent,
             decoration: TextDecoration.underline,
           ),
         ),
@@ -222,14 +250,20 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildDivider() {
-    return const Row(
+    return Row(
       children: [
-        Expanded(child: Divider(thickness: 1)),
+        Expanded(child: Divider(thickness: 1, color: Colors.grey[400])),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text('O', style: TextStyle(color: Colors.grey)),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            'O',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
-        Expanded(child: Divider(thickness: 1)),
+        Expanded(child: Divider(thickness: 1, color: Colors.grey[400])),
       ],
     );
   }
@@ -239,17 +273,14 @@ class _LoginScreenState extends State<LoginScreen> {
       onPressed: () => Navigator.pushNamed(context, AppRoutes.registro),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        side: const BorderSide(color: Colors.blue),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: const BorderSide(color: Colors.blueAccent),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.blueAccent,
       ),
       child: const Text(
         'CREAR UNA CUENTA',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.blue,
-        ),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }

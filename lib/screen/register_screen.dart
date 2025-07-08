@@ -33,7 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() == true) {
       setState(() => _isLoading = true);
-      
+
       try {
         final response = await AuthService.register(
           _dniController.text,
@@ -42,16 +42,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _nombreController.text,
         );
 
-        // Mostrar mensaje de éxito y volver al login
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registro exitoso!')),
+          SnackBar(
+            content: const Text('¡Registro exitoso!'),
+            backgroundColor: Colors.green[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
-        
-        Navigator.pop(context); // Regresar a la pantalla de login
-        
+
+        Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       } finally {
         setState(() => _isLoading = false);
@@ -62,10 +76,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Registro")),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: const Text(
+          'Registro',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blueAccent.withOpacity(0.1), Colors.grey[50]!],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -73,14 +103,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Campo DNI
                 TextFormField(
                   controller: _dniController,
-                  decoration: const InputDecoration(
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
                     labelText: 'DNI',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.credit_card),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(
+                      Icons.credit_card,
+                      color: Colors.blueGrey,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor ingresa tu DNI';
+                    }
+                    if (value.length < 8) {
+                      return 'El DNI debe tener 8 dígitos';
                     }
                     return null;
                   },
@@ -91,10 +136,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Campo Nombre
                 TextFormField(
                   controller: _nombreController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Nombre Completo',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(
+                      Icons.person,
+                      color: Colors.blueGrey,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -110,10 +166,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Correo Electrónico',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(Icons.email, color: Colors.blueGrey),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -134,17 +198,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(Icons.lock, color: Colors.blueGrey),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword 
-                          ? Icons.visibility_off 
-                          : Icons.visibility),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.blueGrey,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
                         });
                       },
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
                     ),
                   ),
                   validator: (value) {
@@ -166,17 +241,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
                     labelText: 'Confirmar Contraseña',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(Icons.lock, color: Colors.blueGrey),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirmPassword 
-                          ? Icons.visibility_off 
-                          : Icons.visibility),
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.blueGrey,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscureConfirmPassword = !_obscureConfirmPassword;
                         });
                       },
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
                     ),
                   ),
                   validator: (value) {
@@ -187,17 +273,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Botón de Registro
                 ElevatedButton(
                   onPressed: _isLoading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 2,
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Registrarse'),
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'REGISTRARSE',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ],
             ),
