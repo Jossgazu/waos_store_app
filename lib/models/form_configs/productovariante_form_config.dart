@@ -31,6 +31,13 @@ class ProductoVarianteFormConfig {
         required: true,
         defaultValue: true,
       ),
+      FormFieldConfig(
+        field: 'imagen',
+        label: 'Imagen de la Variante',
+        type: 'image',
+        required: false,
+        hint: 'Seleccione una imagen para la variante',
+      ),
     ];
   }
 }

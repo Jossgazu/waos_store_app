@@ -34,6 +34,21 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Color _getSelectedItemColor(int index) {
+    switch (index) {
+      case 0: // Inicio
+        return Colors.blue;
+      case 1: // Ventas
+        return Colors.green;
+      case 2: // Inventario
+        return Colors.orange;
+      case 3: // Configuración
+        return Colors.grey;
+      default:
+        return Colors.blue;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
         items: _bottomItems,
-        selectedItemColor: Colors.orange,
+        selectedItemColor: _getSelectedItemColor(_currentIndex),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
       ),

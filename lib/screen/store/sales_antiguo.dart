@@ -20,51 +20,46 @@ class _SalesScreenState extends State<SalesScreen> {
     super.initState();
     _loadProductos();
   }
-Future<void> _loadProductos() async {
-  setState(() => _isLoadingProductos = true);
-  try {
-    final variantsData = await ApiService.getData('producto-variante');
-    final inventarioData = await ApiService.getData('inventario');
 
-    List<dynamic> productosConStock = [];
-    for (var variant in variantsData) {
-      int variantId = variant['id_producto_variante'];
-      final movimientos = inventarioData
-          .where((inv) => inv['fk_producto_variante'] == variantId)
-          .toList();
-      int currentStock = 0;
-      if (movimientos.isNotEmpty) {
-        movimientos.sort(
-          (a, b) => (b['id_inventario'] as int).compareTo(
-            a['id_inventario'] as int,
-          ),
-        );
-        currentStock = movimientos.first['stock_actual'] ?? 0;
+  Future<void> _loadProductos() async {
+    setState(() => _isLoadingProductos = true);
+    try {
+      final variantsData = await ApiService.getData('producto-variante');
+      final inventarioData = await ApiService.getData('inventario');
+
+      List<dynamic> productosConStock = [];
+      for (var variant in variantsData) {
+        int variantId = variant['id_producto_variante'];
+        final movimientos = inventarioData
+            .where((inv) => inv['fk_producto_variante'] == variantId)
+            .toList();
+        int currentStock = 0;
+        if (movimientos.isNotEmpty) {
+          movimientos.sort(
+            (a, b) => (b['id_inventario'] as int).compareTo(
+              a['id_inventario'] as int,
+            ),
+          );
+          currentStock = movimientos.first['stock_actual'] ?? 0;
+        }
+        variant['stock_actual'] = currentStock;
+        productosConStock.add(variant);
       }
-      variant['stock_actual'] = currentStock;
 
-      // Asegúrate de que los campos necesarios existan
-      variant['nombre'] = variant['nombre'] ?? 'Producto sin nombre';
-      variant['precio_base'] = double.tryParse(variant['precio_base'].toString()) ?? 0.0;
-      variant['precio_adicional'] = double.tryParse(variant['precio_adicional'].toString()) ?? 0.0;
-
-      productosConStock.add(variant);
+      setState(() {
+        _productos = productosConStock;
+        _isLoadingProductos = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingProductos = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar productos: $e'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
     }
-
-    setState(() {
-      _productos = productosConStock;
-      _isLoadingProductos = false;
-    });
-  } catch (e) {
-    setState(() => _isLoadingProductos = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error al cargar productos: $e'),
-        backgroundColor: Colors.red[700],
-      ),
-    );
   }
-}
 
   void _addToCart(int index, int cantidad) {
     final producto = _productos[index];
