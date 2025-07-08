@@ -1,4 +1,3 @@
-// usuario_form_config.dart
 import 'package:waos_store_app/models/form_field_config.dart';
 
 class UsuarioFormConfig {
@@ -33,11 +32,18 @@ class UsuarioFormConfig {
         hint: 'Ingrese el correo del usuario',
       ),
       FormFieldConfig(
-        field: 'fk_rol',
+        field: 'rol',
         label: 'Rol',
         type: 'dropdown',
         required: true,
         hint: 'Seleccione un rol',
+        options: [
+          {'value': 'administrador', 'label': 'ADMINISTRADOR'},
+          {'value': 'vendedor', 'label': 'VENDEDOR'},
+          {'value': 'proveedor', 'label': 'PROVEEDOR'},
+          {'value': 'cliente', 'label': 'CLIENTE'},
+          {'value': 'trabajador', 'label': 'TRABAJADOR'},
+        ],
       ),
     ];
   }

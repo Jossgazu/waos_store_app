@@ -25,111 +25,187 @@ class _FormScreenState extends State<FormScreen> {
   Map<String, dynamic> _formData = {};
   bool _isLoading = false;
   List<FormFieldConfig> _fieldConfigs = [];
+  Map<String, List<Map<String, dynamic>>> _dropdownOptions = {};
 
   @override
-  void initState() {
-    super.initState();
-    print('FormScreen endpoint: ${widget.endpoint}'); // Debug
+void initState() {
+  super.initState();
+  _fieldConfigs = FormConfig.getConfig(widget.endpoint) ?? [];
+  for (var config in _fieldConfigs) {
+    if (config.type == 'text' ||
+        config.type == 'textarea' ||
+        config.type == 'number' ||
+        config.type == 'phone' ||
+        config.type == 'password' ||      // <-- agrega esto
+        config.type == 'email') {         // <-- y esto
+      _controllers[config.field] = TextEditingController(
+        text: widget.initialData?[config.field]?.toString() ?? '',
+      );
+    }
+    _formData[config.field] =
+        widget.initialData?[config.field] ?? config.defaultValue;
+  }
+  _loadDropdownOptions();
+}
 
-    // Obtener configuración y proporcionar una lista vacía si es null
-    _fieldConfigs = FormConfig.getConfig(widget.endpoint) ?? [];
-
-    print('Field configs found: ${_fieldConfigs.length}'); // Debug
-
-    // Inicializar controllers y datos del formulario
-    for (var config in _fieldConfigs) {
-      // Inicializar controllers solo para tipos de entrada de texto
-      if (config.type == 'text' ||
-          config.type == 'textarea' ||
-          config.type == 'number' ||
-          config.type == 'phone') {
-        _controllers[config.field] = TextEditingController(
-          text: widget.initialData?[config.field]?.toString() ?? '',
-        );
-      }
-
-      // Inicializar datos del formulario con valores por defecto o iniciales
-      _formData[config.field] =
-          widget.initialData?[config.field] ?? config.defaultValue;
+  Future<void> _loadDropdownOptions() async {
+  for (var config in _fieldConfigs.where((c) => c.type == 'dropdown')) {
+    String? entity = _getEntityFromField(config.field);
+    if (entity != null) {
+      final data = await ApiService.getData(entity);
+      setState(() {
+        _dropdownOptions[config.field] = data;
+      });
     }
   }
+}
 
-  @override
-  void dispose() {
-    // Liberar recursos de los controllers
-    for (var controller in _controllers.values) {
-      controller.dispose();
+String? _getEntityFromField(String field) {
+  if (field.startsWith('fk_')) {
+    return field.substring(3).replaceAll('_', '-').toLowerCase();
+  }
+  if (field.startsWith('fk')) {
+    return field.substring(2).replaceAll('_', '-').toLowerCase();
+  }
+  return null;
+}
+
+  String _getIdFieldForEntity(String entity) {
+    // Puedes mejorar este mapeo según tus convenciones
+    switch (entity) {
+      case 'categoria':
+        return 'id_categoria';
+      case 'producto':
+        return 'id_producto';
+      case 'empresa':
+        return 'id_empresa';
+      case 'sucursal':
+        return 'id_sucursal';
+      case 'usuario':
+        return 'id_usuario';
+      // case 'rol':
+      //   return 'id_rol';
+      case 'proveedor':
+        return 'id_proveedor';
+      case 'metodo-pago':
+        return 'id_metodo_pago';
+      case 'comprobante-cabecera':
+        return 'id_comprobante_cabecera';
+      case 'comprobante-detalle':
+        return 'id_comprobante_detalle';
+      case 'pago':
+        return 'id_pago';
+      case 'inventario':
+        return 'id_inventario';
+      case 'producto-variante':
+        return 'id_producto_variante';
+      default:
+        return 'id';
     }
-    super.dispose();
   }
 
   Widget _buildFormFields() {
     return Column(
       children: _fieldConfigs.map((config) {
-        switch (config.type) {
-          case 'text':
-          case 'textarea':
-          case 'number':
-          case 'phone':
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: TextFormField(
-                controller: _controllers[config.field],
-                decoration: InputDecoration(
-                  labelText: config.label,
-                  hintText: config.hint,
-                  border: const OutlineInputBorder(),
-                ),
-                maxLines: config.type == 'textarea' ? 3 : 1,
-                keyboardType: config.type == 'number'
-                    ? TextInputType.number
-                    : config.type == 'phone'
-                    ? TextInputType.phone
-                    : TextInputType.text,
-                validator: (value) {
-  if (config.required && (value == null || value.isEmpty)) {
-    return '${config.label} es obligatorio';
-  }
-  return null;
-},
-                onSaved: (value) {
-  if (config.type == 'number') {
-    _formData[config.field] = (value == null || value.isEmpty)
-        ? 0 // <-- aquí el valor por defecto
-        : double.tryParse(value);
-  } else {
-    _formData[config.field] = value;
-  }
-},
-              ),
-            );
+        if (config.type == 'dropdown') {
+          final entity = _getEntityFromField(config.field);
+          final options = config.options ?? _dropdownOptions[config.field] ?? [];
+  final idField = config.options != null ? 'value' : (entity != null ? _getIdFieldForEntity(entity) : 'id');
+  final labelField = config.options != null ? 'label' : 'nombre';
 
-          case 'switch':
-            return SwitchListTile(
-              title: Text(config.label),
-              value: _formData[config.field] ?? config.defaultValue ?? false,
-              onChanged: (value) {
-                setState(() {
-                  _formData[config.field] = value;
-                });
-              },
-            );
-
-          default:
-            return SizedBox.shrink();
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: DropdownButtonFormField<dynamic>(
+      value: _formData[config.field],
+      decoration: InputDecoration(
+        labelText: config.label,
+        border: const OutlineInputBorder(),
+      ),
+      items: options.map<DropdownMenuItem<dynamic>>((item) {
+        return DropdownMenuItem(
+          value: item[idField],
+          child: Text(item[labelField] ?? item['descripcion'] ?? item[idField].toString()),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _formData[config.field] = value;
+        });
+      },
+      validator: (value) {
+        if (config.required && (value == null || value.toString().isEmpty)) {
+          return '${config.label} es obligatorio';
         }
+        return null;
+      },
+    ),
+  );
+}
+        // ...otros tipos de campos...
+        // ...existing code...
+if (config.type == 'text' ||
+    config.type == 'textarea' ||
+    config.type == 'number' ||
+    config.type == 'phone' ||
+    config.type == 'password' || // <--- agrega esto
+    config.type == 'email') {    // <--- y esto
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: TextFormField(
+      controller: _controllers[config.field],
+      decoration: InputDecoration(
+        labelText: config.label,
+        hintText: config.hint,
+        border: const OutlineInputBorder(),
+      ),
+      maxLines: config.type == 'textarea' ? 3 : 1,
+      obscureText: config.type == 'password', // <--- para ocultar contraseña
+      keyboardType: config.type == 'number'
+          ? TextInputType.number
+          : config.type == 'phone'
+              ? TextInputType.phone
+              : config.type == 'email'
+                  ? TextInputType.emailAddress
+                  : TextInputType.text,
+      validator: (value) {
+        if (config.required && (value == null || value.isEmpty)) {
+          return '${config.label} es obligatorio';
+        }
+        return null;
+      },
+      onSaved: (value) {
+        if (config.type == 'number') {
+          _formData[config.field] = (value == null || value.isEmpty)
+              ? 0
+              : double.tryParse(value);
+        } else {
+          _formData[config.field] = value;
+        }
+      },
+    ),
+  );
+}
+        if (config.type == 'switch') {
+          return SwitchListTile(
+            title: Text(config.label),
+            value: _formData[config.field] ?? config.defaultValue ?? false,
+            onChanged: (value) {
+              setState(() {
+                _formData[config.field] = value;
+              });
+            },
+          );
+        }
+        return const SizedBox.shrink();
       }).toList(),
     );
   }
 
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
-
     _formKey.currentState!.save();
     setState(() => _isLoading = true);
-
     try {
-      // Guardar los datos utilizando ApiService
       await ApiService.save(
         widget.endpoint,
         widget.initialData?['id'],
@@ -137,9 +213,9 @@ class _FormScreenState extends State<FormScreen> {
       );
       Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     } finally {
       setState(() => _isLoading = false);
     }

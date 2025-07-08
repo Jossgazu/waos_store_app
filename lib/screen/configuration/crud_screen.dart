@@ -91,111 +91,146 @@ class _CrudScreenState extends State<CrudScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _goToCreateForm,
-        child: const Icon(Icons.add),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Lista de ${widget.title}',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 16),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (_items.isEmpty)
-              const Center(
-                child: Text(
-                  'No hay elementos para mostrar',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _items.length,
-                  itemBuilder: (_, i) {
-                    final item = _items[i];
-                    final id = item['id'] ?? item['id_categoria']; // Manejar diferentes formatos de ID
-                    final name = item['nombre'] ?? 'Sin nombre';
-                    final description = item['descripcion'] ?? '';
-                    final isActive = item['activo'] ?? false;
-                    
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      child: ListTile(
-                        title: Text(name),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (description.isNotEmpty) Text(description),
-                            Text('ID: $id'),
-                            Row(
-                              children: [
-                                Text('Estado: '),
-                                Icon(
-                                  isActive ? Icons.check_circle : Icons.cancel,
-                                  color: isActive ? Colors.green : Colors.red,
-                                  size: 16,
-                                ),
-                                Text(isActive ? 'Activo' : 'Inactivo'),
-                              ],
-                            ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _goToEditForm(id, item),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text('Eliminar'),
-                                    content: Text('¿Estás seguro de eliminar "$name"?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(),
-                                        child: const Text('Cancelar'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                          _deleteItem(id);
-                                        },
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Colors.red,
-                                        ),
-                                        child: const Text('Eliminar'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
+  String _getIdFieldForEndpoint(String endpoint) {
+  switch (endpoint) {
+    case 'categoria':
+      return 'id_categoria';
+    case 'producto':
+      return 'id_producto';
+    case 'usuario':
+      return 'id_usuario';
+    case 'sucursal':
+      return 'id_sucursal';
+    case 'proveedor':
+      return 'id_proveedor';
+    case 'metodo-pago':
+      return 'id_metodo_pago';
+    case 'empresa':
+      return 'id_empresa';
+    case 'comprobante-cabecera':
+      return 'id_comprobante_cabecera';
+    case 'comprobante-detalle':
+      return 'id_comprobante_detalle';
+    case 'pago':
+      return 'id_pago';
+    case 'inventario':
+      return 'id_inventario';
+    case 'producto-variante':
+      return 'id_producto_variante';
+    default:
+      return 'id';
   }
+}
+
+  @override
+Widget build(BuildContext context) {
+  final idField = _getIdFieldForEndpoint(widget.endpoint);
+
+  return Scaffold(
+    appBar: AppBar(title: Text(widget.title)),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _goToCreateForm,
+      child: const Icon(Icons.add),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Lista de ${widget.title}',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 16),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_items.isEmpty)
+            const Center(
+              child: Text(
+                'No hay elementos para mostrar',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _items.length,
+                itemBuilder: (_, i) {
+                  final item = _items[i];
+                  final id = item[idField]; // <-- usa el campo correcto
+                  final name = item['nombre'] ?? 'Sin nombre';
+                  final description = item['descripcion'] ?? '';
+                  final isActive = item['activo'] ?? false;
+
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      title: Text(name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (description.isNotEmpty) Text(description),
+                          Text('ID: $id'),
+                          Row(
+                            children: [
+                              Text('Estado: '),
+                              Icon(
+                                isActive ? Icons.check_circle : Icons.cancel,
+                                color: isActive ? Colors.green : Colors.red,
+                                size: 16,
+                              ),
+                              Text(isActive ? 'Activo' : 'Inactivo'),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: id != null ? () => _goToEditForm(id, item) : null,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: id != null
+                                ? () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Eliminar'),
+                                        content: Text('¿Estás seguro de eliminar "$name"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(),
+                                            child: const Text('Cancelar'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                              _deleteItem(id);
+                                            },
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.red,
+                                            ),
+                                            child: const Text('Eliminar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
 }

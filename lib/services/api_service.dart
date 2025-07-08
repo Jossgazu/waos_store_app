@@ -8,33 +8,79 @@ class ApiService {
   static const String baseUrl = 'http://localhost:8000';
   
   // Método para obtener datos (GET)
-  static Future<List<Map<String, dynamic>>> getData(String endpoint) async {
-    try {
-      // Limpiar endpoint y construir URL correcta
-      String cleanEndpoint = endpoint.replaceAll('/', '');
-      final url = '$baseUrl/$cleanEndpoint/';
-      
-      print('Getting data from URL: $url'); // Debug
-      
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+  // ...existing code...
+static Future<List<Map<String, dynamic>>> getData(String endpoint) async {
+  try {
+    // Limpiar endpoint y construir URL correcta
+    String cleanEndpoint = endpoint.replaceAll(RegExp(r'^/+|/+$'), '');
+    final url = '$baseUrl/$cleanEndpoint/';
+    
+    print('Getting data from URL: $url'); // Debug
+    
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+    );
+    
+    print('Response status: ${response.statusCode}'); // Debug
+    print('Response body: ${response.body}'); // Debug
+    
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final List<dynamic> jsonData = json.decode(response.body);
+      return jsonData.cast<Map<String, dynamic>>();
+    } else if (response.statusCode == 404) {
+      throw Exception(
+        'Error 404 - Not Found: El endpoint "$url" no existe en el backend. '
+        'Esto puede deberse a que:\n'
+        '- El nombre del endpoint es incorrecto (revisa mayúsculas, guiones y barras).\n'
+        '- El backend no tiene implementada la ruta solicitada.\n'
+        '- Hay un error en la configuración de rutas del backend.\n'
+        'Verifica que la URL sea correcta y que el backend esté corriendo.'
       );
-      
-      print('Response status: ${response.statusCode}'); // Debug
-      print('Response body: ${response.body}'); // Debug
-      
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        return jsonData.cast<Map<String, dynamic>>();
-      } else {
-        throw Exception('Error del servidor: ${response.statusCode} - ${response.body}');
-      }
-    } catch (e) {
-      print('Error in ApiService.getData: $e'); // Debug
-      throw Exception('Error al obtener datos: $e');
+    } else if (response.statusCode == 500) {
+      throw Exception(
+        'Error 500 - Internal Server Error: El servidor encontró un error al procesar la solicitud para "$url". '
+        'Esto puede deberse a:\n'
+        '- Un error en la lógica del backend (excepción no controlada).\n'
+        '- Problemas de base de datos o dependencias.\n'
+        '- El backend recibió datos inesperados o incompletos.\n'
+        'Revisa los logs del backend para más detalles.'
+      );
+    } else {
+      throw Exception(
+        'Error del servidor: ${response.statusCode} - ${response.body}\n'
+        'URL solicitada: $url'
+      );
     }
+  } catch (e) {
+    print('Error in ApiService.getData: $e'); // Debug
+    throw Exception('Error al obtener datos: $e');
   }
+}
+
+// ...existing code...
+
+static Future<Map<String, dynamic>> getDataMap(String endpoint) async {
+  try {
+    String cleanEndpoint = endpoint.replaceAll(RegExp(r'^/+|/+$'), '');
+    final url = '$baseUrl/$cleanEndpoint/';
+    print('Getting data (map) from URL: $url');
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+    );
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Error del servidor: ${response.statusCode} - ${response.body}');
+    }
+  } catch (e) {
+    print('Error in ApiService.getDataMap: $e');
+    throw Exception('Error al obtener datos: $e');
+  }
+}
 
   // Método para obtener un elemento específico por ID (GET)
   static Future<Map<String, dynamic>> getDataById(String endpoint, int id) async {
@@ -189,4 +235,16 @@ static Future<Map<String, dynamic>> save(String endpoint, int? id, Map<String, d
   static Future<Map<String, dynamic>> putData(String endpoint, int id, Map<String, dynamic> data) async {
     return await save(endpoint, id, data);
   }
+
+  static Future<void> patch(String endpoint, Map<String, dynamic> data) async {
+  final url = '$baseUrl/$endpoint';
+  final response = await http.patch(
+    Uri.parse(url),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode(data),
+  );
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw Exception('Error al actualizar: ${response.statusCode} - ${response.body}');
+  }
+}
 }

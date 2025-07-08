@@ -5,6 +5,8 @@ class FormFieldConfig {
   final bool required;
   final dynamic defaultValue;
   final String? hint;
+  final List<Map<String, dynamic>>? options; 
+
 
   const FormFieldConfig({
     required this.field,
@@ -13,5 +15,6 @@ class FormFieldConfig {
     this.required = false,
     this.defaultValue,
     this.hint,
+    this.options, 
   });
 }

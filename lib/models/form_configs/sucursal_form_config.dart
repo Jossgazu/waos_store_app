@@ -23,7 +23,7 @@ class SucursalFormConfig {
         field: 'telefono',
         label: 'Teléfono',
         type: 'phone',
-        required: false,
+        required: true,
         hint: 'Ingrese el teléfono de la sucursal',
       ),
       FormFieldConfig(

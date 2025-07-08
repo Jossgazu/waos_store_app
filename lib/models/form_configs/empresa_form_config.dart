@@ -15,7 +15,7 @@ class EmpresaFormConfig {
       FormFieldConfig(
         field: 'ruc',
         label: 'RUC',
-        type: 'text',
+        type: 'number',
         required: true,
         hint: 'Ingrese el RUC de la empresa',
       ),

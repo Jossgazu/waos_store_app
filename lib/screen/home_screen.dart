@@ -5,7 +5,9 @@ import 'package:waos_store_app/screen/sales_screen.dart';
 import 'package:waos_store_app/screen/store_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userRole;
+
+  const HomeScreen({super.key, required this.userRole});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -13,20 +15,50 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  late List<Widget> _availableScreens;
+  late List<BottomNavigationBarItem> _availableBottomItems;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    SalesScreen(),
-    StoreScreen(),
-    ConfigurationScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _setupUIForRole();
+  }
 
-  final List<BottomNavigationBarItem> _bottomItems = const [
-    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-    BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Ventas'),
-    BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventario'),
-    BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configuración'),
-  ];
+  void _setupUIForRole() {
+    switch (widget.userRole.toLowerCase()) {
+      case 'administrador':
+        _availableScreens = const [
+          DashboardScreen(),
+          SalesScreen(),
+          StoreScreen(),
+          ConfigurationScreen(),
+        ];
+        _availableBottomItems = const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Ventas'),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventario'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Configuración'),
+        ];
+        break;
+      case 'vendedor':
+        _availableScreens = const [SalesScreen()];
+        _availableBottomItems = const [
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Ventas'),
+        ];
+        break;
+      case 'proveedor':
+        _availableScreens = const [StoreScreen()];
+        _availableBottomItems = const [
+          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventario'),
+        ];
+        break;
+      default:
+        _availableScreens = const [DashboardScreen()];
+        _availableBottomItems = const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+        ];
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -37,19 +69,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Waos Store'),
-      ),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
-        items: _bottomItems,
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed, // Muestra todas las etiquetas
-      ),
+      appBar: AppBar(title: const Text('Waos Store')),
+      body: _availableScreens[_currentIndex],
+      bottomNavigationBar: _availableBottomItems.length > 1
+          ? BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: _onItemTapped,
+              items: _availableBottomItems,
+              selectedItemColor: Colors.orange,
+              unselectedItemColor: Colors.grey,
+            )
+          : null,
     );
   }
 }

@@ -15,14 +15,14 @@ class ProveedorFormConfig {
         field: 'ruc',
         label: 'RUC',
         type: 'text',
-        required: true,
+        required: false,
         hint: 'Ingrese el RUC del proveedor',
       ),
       FormFieldConfig(
         field: 'direccion',
         label: 'Dirección',
         type: 'text',
-        required: true,
+        required: false,
         hint: 'Ingrese la dirección del proveedor',
       ),
       FormFieldConfig(

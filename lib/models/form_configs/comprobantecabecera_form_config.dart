@@ -1,7 +1,6 @@
 // comprobantecabecera_form_config.dart
 import 'package:waos_store_app/models/form_field_config.dart';
 
-
 class ComprobanteCabeceraFormConfig {
   static List<FormFieldConfig> getConfig() {
     return [
@@ -18,13 +17,6 @@ class ComprobanteCabeceraFormConfig {
         type: 'text',
         required: true,
         hint: 'Ingrese la serie correlativo',
-      ),
-      FormFieldConfig(
-        field: 'fecha',
-        label: 'Fecha',
-        type: 'datetime',
-        required: true,
-        hint: 'Seleccione la fecha',
       ),
       FormFieldConfig(
         field: 'igv',

@@ -5,7 +5,6 @@ import 'package:waos_store_app/screen/home_screen.dart';
 import 'package:waos_store_app/screen/login_screen.dart';
 import 'package:waos_store_app/screen/recover_password.dart';
 import 'package:waos_store_app/screen/register_screen.dart';
-import 'package:waos_store_app/screen/configuration/form_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -14,11 +13,15 @@ class AppRoutes {
   static const String recover = '/recover';
   static const String dashboard = '/dashboard';
   static const String form = '/form';
-  // Mapa de rutas
+
   static Map<String, WidgetBuilder> routes = {
     login: (context) => const LoginScreen(),
     registro: (context) => const RegisterScreen(),
-    home: (context) => const HomeScreen(),
+    home: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments 
+          as Map<String, dynamic>? ?? {'userRole': 'invitado'};
+      return HomeScreen(userRole: args['userRole']);
+    },
     recover: (context) => const RecoverScreen(),
     dashboard: (context) => const DashboardScreen(),
     form: (context) {
@@ -32,6 +35,5 @@ class AppRoutes {
     },
   };
 
-  // Ruta inicial
-  static String initialRoute = home;
+  static String initialRoute = login; // Cambiado a login como ruta inicial
 }

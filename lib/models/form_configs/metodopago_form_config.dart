@@ -14,9 +14,15 @@ class MetodoPagoFormConfig {
       FormFieldConfig(
         field: 'tipo',
         label: 'Tipo',
-        type: 'text',
+        type: 'dropdown',
         required: true,
-        hint: 'Ingrese el tipo del método de pago',
+        hint: 'Seleccione el tipo de método de pago',
+        options: [
+          {'value': 'efectivo', 'label': 'EFECTIVO'},
+          {'value': 'tarjeta', 'label': 'TARJETA'},
+          {'value': 'digital', 'label': 'DIGITAL'},
+          {'value': 'transferencia', 'label': 'TRANSFERENCIA'},
+        ],
       ),
       FormFieldConfig(
         field: 'activo',
