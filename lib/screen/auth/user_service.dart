@@ -1,15 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:hive/hive.dart';
 
 class UserService {
   static const String _baseUrl = 'http://localhost:8000/usuario';
-  static final _authBox = Hive.box('authBox');
 
-  static Future<Map<String, dynamic>> getCurrentUser() async {
+  // Ahora el token se pasa como argumento
+  static Future<Map<String, dynamic>> getCurrentUser(String token) async {
     try {
-      final token = _authBox.get('token');
-      if (token == null) throw Exception('No autenticado');
+      if (token == null || token.isEmpty) throw Exception('No autenticado');
 
       final response = await http.get(
         Uri.parse('$_baseUrl/me'),
@@ -29,8 +27,7 @@ class UserService {
     }
   }
 
-  static Future<Map<String, dynamic>> getUserByDni(String dni) async {
-    final token = _authBox.get('token');
+  static Future<Map<String, dynamic>> getUserByDni(String dni, String token) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/dni/$dni'),
       headers: {
@@ -46,8 +43,7 @@ class UserService {
     }
   }
 
-  static Future<List<dynamic>> getUsersByRole(String rol) async {
-    final token = _authBox.get('token');
+  static Future<List<dynamic>> getUsersByRole(String rol, String token) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/rol/$rol'),
       headers: {

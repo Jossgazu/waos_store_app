@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:waos_store_app/routes/app_routes.dart';
 import 'package:waos_store_app/screen/auth/auth_service.dart';
 import 'package:waos_store_app/screen/auth/user_service.dart';
@@ -26,37 +26,42 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submitForm() async {
-  if (_formKey.currentState?.validate() != true) return;
+    if (_formKey.currentState?.validate() != true) return;
 
-  setState(() => _isLoading = true);
-  
-  try {
-    final response = await AuthService.login(
-      _dniController.text.trim(),
-      _passwordController.text.trim(),
-    );
-
-    // Guardar token en Hive
-    final authBox = Hive.box('authBox');
-    await authBox.put('token', response['access_token']);
-
-    // Obtener datos completos del usuario
-    final userData = await UserService.getUserByDni(_dniController.text.trim());
+    setState(() => _isLoading = true);
     
-    // Guardar datos importantes del usuario
-    await authBox.put('userData', userData);
+    try {
+      final response = await AuthService.login(
+        _dniController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
-    // Navegar a home
-    Navigator.pushReplacementNamed(context, AppRoutes.home);
-    
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: ${e.toString()}')),
-    );
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
+      // Guardar token y datos de usuario en SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', response['access_token']);
+
+      // Obtener datos completos del usuario
+      final userData = await UserService.getUserByDni(
+        _dniController.text.trim(),
+        response['access_token'],
+      );
+      
+      // Guardar datos importantes del usuario como string JSON
+      await prefs.setString('userData', userData.toString());
+
+      // Navegar a home
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
+      
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackbar(context, e);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
-}
 
   void _showErrorSnackbar(BuildContext context, dynamic error) {
     String errorMessage = 'Error de autenticación';
