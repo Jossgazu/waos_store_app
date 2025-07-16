@@ -10,61 +10,94 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   bool _isLoadingProductos = false;
+  bool _isLoadingPaymentMethods = false;
   List<dynamic> _productos = [];
+  List<dynamic> _paymentMethods = [];
   List<Map<String, dynamic>> _carrito = [];
   double _total = 0.0;
   bool _isProcessingSale = false;
+  int? _selectedPaymentMethodId;
 
   @override
   void initState() {
     super.initState();
-    _loadProductos();
+    _loadData();
   }
-Future<void> _loadProductos() async {
-  setState(() => _isLoadingProductos = true);
-  try {
-    final variantsData = await ApiService.getData('producto-variante');
-    final inventarioData = await ApiService.getData('inventario');
 
-    List<dynamic> productosConStock = [];
-    for (var variant in variantsData) {
-      int variantId = variant['id_producto_variante'];
-      final movimientos = inventarioData
-          .where((inv) => inv['fk_producto_variante'] == variantId)
-          .toList();
-      int currentStock = 0;
-      if (movimientos.isNotEmpty) {
-        movimientos.sort(
-          (a, b) => (b['id_inventario'] as int).compareTo(
-            a['id_inventario'] as int,
-          ),
-        );
-        currentStock = movimientos.first['stock_actual'] ?? 0;
-      }
-      variant['stock_actual'] = currentStock;
+  Future<void> _loadData() async {
+    await Future.wait([
+      _loadProductos(),
+      _loadPaymentMethods(),
+    ]);
+  }
 
-      // Asegúrate de que los campos necesarios existan
-      variant['nombre'] = variant['nombre'] ?? 'Producto sin nombre';
-      variant['precio_base'] = double.tryParse(variant['precio_base'].toString()) ?? 0.0;
-      variant['precio_adicional'] = double.tryParse(variant['precio_adicional'].toString()) ?? 0.0;
-
-      productosConStock.add(variant);
+  Future<void> _loadPaymentMethods() async {
+    setState(() => _isLoadingPaymentMethods = true);
+    try {
+      final methods = await ApiService.getData('metodo-pago');
+      setState(() {
+        _paymentMethods = methods;
+        if (methods.isNotEmpty) {
+          _selectedPaymentMethodId = methods.first['id_metodo_pago'];
+        }
+        _isLoadingPaymentMethods = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingPaymentMethods = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar métodos de pago: $e'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
     }
-
-    setState(() {
-      _productos = productosConStock;
-      _isLoadingProductos = false;
-    });
-  } catch (e) {
-    setState(() => _isLoadingProductos = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error al cargar productos: $e'),
-        backgroundColor: Colors.red[700],
-      ),
-    );
   }
-}
+
+  Future<void> _loadProductos() async {
+    setState(() => _isLoadingProductos = true);
+    try {
+      final variantsData = await ApiService.getData('producto-variante');
+      final inventarioData = await ApiService.getData('inventario');
+
+      List<dynamic> productosConStock = [];
+      for (var variant in variantsData) {
+        int variantId = variant['id_producto_variante'];
+        final movimientos = inventarioData
+            .where((inv) => inv['fk_producto_variante'] == variantId)
+            .toList();
+        int currentStock = 0;
+        if (movimientos.isNotEmpty) {
+          movimientos.sort(
+            (a, b) => (b['id_inventario'] as int).compareTo(
+              a['id_inventario'] as int,
+            ),
+          );
+          currentStock = movimientos.first['stock_actual'] ?? 0;
+        }
+        variant['stock_actual'] = currentStock;
+
+        // Asegúrate de que los campos necesarios existan
+        variant['nombre'] = variant['nombre'] ?? 'Producto sin nombre';
+        variant['precio_base'] = double.tryParse(variant['precio_base'].toString()) ?? 0.0;
+        variant['precio_adicional'] = double.tryParse(variant['precio_adicional'].toString()) ?? 0.0;
+
+        productosConStock.add(variant);
+      }
+
+      setState(() {
+        _productos = productosConStock;
+        _isLoadingProductos = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingProductos = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar productos: $e'),
+          backgroundColor: Colors.red[700],
+        ),
+      );
+    }
+  }
 
   void _addToCart(int index, int cantidad) {
     final producto = _productos[index];
@@ -109,7 +142,7 @@ Future<void> _loadProductos() async {
               (double.tryParse(producto['precio_base'].toString()) ?? 0.0) +
               (double.tryParse(producto['precio_adicional'].toString()) ?? 0.0),
           'cantidad': cantidad,
-          'imagen_url': producto['imagen_url'], // Añadir URL de la imagen al carrito
+          'imagen_url': producto['imagen_url'],
         });
       }
       _calculateTotal();
@@ -134,11 +167,22 @@ Future<void> _loadProductos() async {
   }
 
   Future<void> _processSale() async {
+    if (_selectedPaymentMethodId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Por favor seleccione un método de pago'),
+          backgroundColor: Colors.orange[700],
+        ),
+      );
+      return;
+    }
+
     setState(() => _isProcessingSale = true);
     try {
+      // 1. Create comprobante cabecera
       final cabeceraData = {
         'tipo_comprobante': 'boleta',
-        'serie_correlativo': '001-0001',
+        // 'serie_correlativo': '001-0001',
         'igv': 0.18,
         'pago_total': _total,
         'fecha': DateTime.now().toIso8601String(),
@@ -153,12 +197,14 @@ Future<void> _loadProductos() async {
       );
       final idComprobanteCabecera = cabeceraResponse['id_comprobante_cabecera'];
 
+      // 2. Create comprobante detalles and process inventory
       for (var item in _carrito) {
         final detalleData = {
           'fk_producto_variante': item['id_producto_variante'],
           'cantidad': item['cantidad'],
           'precio_producto': item['precio'],
           'fk_comprobante_cabecera': idComprobanteCabecera,
+          'fk_metodo_pago': _selectedPaymentMethodId, // Add payment method to each detail
         };
         await ApiService.save('comprobante-detalle', null, detalleData);
       }
@@ -209,7 +255,7 @@ Future<void> _loadProductos() async {
         child: Column(
           children: [
             Expanded(
-              child: _isLoadingProductos
+              child: _isLoadingProductos || _isLoadingPaymentMethods
                   ? const Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -224,104 +270,86 @@ Future<void> _loadProductos() async {
                         style: TextStyle(color: Colors.grey[600], fontSize: 16),
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: _productos.length,
-                      itemBuilder: (context, index) {
-                        final producto = _productos[index];
-                        final precio =
-                            (double.tryParse(
-                                  producto['precio_base'].toString(),
-                                ) ??
-                                0.0) +
-                            (double.tryParse(
-                                  producto['precio_adicional'].toString(),
-                                ) ??
-                                0.0);
-                        final stock = producto['stock_actual'] ?? 0;
-                        final imagenUrl = producto['imagen_url'];
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
+                  :                   ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: _productos.length,
+                    itemBuilder: (context, index) {
+                      final producto = _productos[index];
+                      final precio = (double.tryParse(producto['precio_base'].toString()) ?? 0.0) +
+                          (double.tryParse(producto['precio_adicional'].toString()) ?? 0.0);
+                      final stock = producto['stock_actual'] ?? 0;
+                      final imagenUrl = producto['imagen_url'];
+                  
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        elevation: 1,
+                        child: ListTile(
+                          leading: imagenUrl != null && imagenUrl.isNotEmpty
+                              ? Image.network(
+                                  'http://localhost:8000$imagenUrl', // URL base para cargar imágenes
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(Icons.image_not_supported); // Icono en caso de error
+                                  },
+                                )
+                              : null, // No mostrar nada si no hay imagen
+                          title: Text(
+                            producto['nombre'] ?? 'Producto sin nombre',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
-                          elevation: 1,
-                          child: ListTile(
-                            leading: imagenUrl != null
-    ? Image.network(
-        'http://localhost:8000${imagenUrl}', // Reemplaza con tu URL base
-        // 'http://localhost:8000/uploads/producto-variantes${imagenUrl}', // Reemplaza con tu URL base
-        width: 50,
-        height: 50,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          print('Error al cargar imagen: $imagenUrl'); // Debug
-          return const Icon(Icons.image_not_supported);
-        },
-      )
-    : const Icon(Icons.image),
-                            title: Text(
-                              producto['nombre'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Precio: S/${precio.toStringAsFixed(2)}',
+                                style: TextStyle(color: Colors.grey[600]),
                               ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Precio: S/${precio.toStringAsFixed(2)}',
-                                  style: TextStyle(color: Colors.grey[600]),
+                              Text(
+                                'Stock: $stock',
+                                style: TextStyle(
+                                  color: stock > 0 ? Colors.green : Colors.red,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                Text(
-                                  'Stock: $stock',
-                                  style: TextStyle(
-                                    color: stock > 0
-                                        ? Colors.green
-                                        : Colors.red,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline),
-                                  color: Colors.redAccent,
-                                  onPressed: () => _addToCart(index, -1),
-                                ),
-                                Container(
-                                  width: 24,
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    (_carrito.firstWhere(
-                                              (item) =>
-                                                  item['id_producto_variante'] ==
-                                                  producto['id_producto_variante'],
-                                              orElse: () => <String, dynamic>{},
-                                            )['cantidad'] ??
-                                            0)
-                                        .toString(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  color: Colors.greenAccent,
-                                  onPressed: () => _addToCart(index, 1),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                    ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: Colors.redAccent,
+                                onPressed: () => _addToCart(index, -1),
+                              ),
+                              Container(
+                                width: 24,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  (_carrito.firstWhere(
+                                            (item) =>
+                                                item['id_producto_variante'] ==
+                                                producto['id_producto_variante'],
+                                            orElse: () => <String, dynamic>{},
+                                          )['cantidad'] ??
+                                          0)
+                                      .toString(),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: Colors.greenAccent,
+                                onPressed: () => _addToCart(index, 1),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  )
+            ),
             Card(
               margin: const EdgeInsets.all(16),
               elevation: 3,
@@ -332,6 +360,32 @@ Future<void> _loadProductos() async {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
+                    if (_paymentMethods.isNotEmpty)
+                      DropdownButtonFormField<int>(
+                        value: _selectedPaymentMethodId,
+                        decoration: InputDecoration(
+                          labelText: 'Método de pago',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: _paymentMethods.map((method) {
+                          return DropdownMenuItem<int>(
+                            value: method['id_metodo_pago'],
+                            child: Text(method['nombre'] ?? 'Método desconocido'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedPaymentMethodId = value;
+                          });
+                        },
+                      ),
+                    const SizedBox(height: 16),
                     ListTile(
                       title: const Text(
                         'Total',

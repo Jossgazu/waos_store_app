@@ -427,6 +427,20 @@ class _BusinessConfigurationScreenState
           padding: const EdgeInsets.all(16),
           children: [
             _buildSection(
+              title: 'Empresas',
+              items: _empresas,
+              isLoading: _isLoadingEmpresas,
+              onCrudPressed: () => _navigateToCrud(context, 'empresa'),
+              idField: 'id_empresa',
+            ),
+            _buildSection(
+              title: 'Sucursales',
+              items: _sucursales,
+              isLoading: _isLoadingSucursales,
+              onCrudPressed: () => _navigateToCrud(context, 'sucursal'),
+              idField: 'id_sucursal',
+            ),
+            _buildSection(
               title: 'Categorías',
               items: _categorias,
               isLoading: _isLoadingCategorias,
@@ -441,11 +455,12 @@ class _BusinessConfigurationScreenState
               idField: 'id_producto',
             ),
             _buildSection(
-              title: 'Sucursales',
-              items: _sucursales,
-              isLoading: _isLoadingSucursales,
-              onCrudPressed: () => _navigateToCrud(context, 'sucursal'),
-              idField: 'id_sucursal',
+              title: 'Producto Variante',
+              items: _productoVariante,
+              isLoading: _isLoadingProductoVariante,
+              onCrudPressed: () =>
+                  _navigateToCrud(context, 'producto-variante'),
+              idField: 'id_producto_variante',
             ),
             _buildSection(
               title: 'Usuarios',
@@ -468,51 +483,38 @@ class _BusinessConfigurationScreenState
               onCrudPressed: () => _navigateToCrud(context, 'metodo-pago'),
               idField: 'id_metodo_pago',
             ),
-            _buildSection(
-              title: 'Empresas',
-              items: _empresas,
-              isLoading: _isLoadingEmpresas,
-              onCrudPressed: () => _navigateToCrud(context, 'empresa'),
-              idField: 'id_empresa',
-            ),
-            _buildSection(
-              title: 'Comprobantes de Cabecera',
-              items: _comprobantesCabecera,
-              isLoading: _isLoadingComprobantesCabecera,
-              onCrudPressed: () =>
-                  _navigateToCrud(context, 'comprobante-cabecera'),
-              idField: 'id_comprobante_cabecera',
-            ),
-            _buildSection(
-              title: 'Comprobantes de Detalle',
-              items: _comprobantesDetalle,
-              isLoading: _isLoadingComprobantesDetalle,
-              onCrudPressed: () =>
-                  _navigateToCrud(context, 'comprobante-detalle'),
-              idField: 'id_comprobante_detalle',
-            ),
-            _buildSection(
-              title: 'Pagos',
-              items: _pagos,
-              isLoading: _isLoadingPagos,
-              onCrudPressed: () => _navigateToCrud(context, 'pago'),
-              idField: 'id_pago',
-            ),
-            _buildSection(
-              title: 'Inventario',
-              items: _inventario,
-              isLoading: _isLoadingInventario,
-              onCrudPressed: () => _navigateToCrud(context, 'inventario'),
-              idField: 'id_inventario',
-            ),
-            _buildSection(
-              title: 'Producto Variante',
-              items: _productoVariante,
-              isLoading: _isLoadingProductoVariante,
-              onCrudPressed: () =>
-                  _navigateToCrud(context, 'producto-variante'),
-              idField: 'id_producto_variante',
-            ),
+            
+            // _buildSection(
+            //   title: 'Comprobantes de Cabecera',
+            //   items: _comprobantesCabecera,
+            //   isLoading: _isLoadingComprobantesCabecera,
+            //   onCrudPressed: () =>
+            //       _navigateToCrud(context, 'comprobante-cabecera'),
+            //   idField: 'id_comprobante_cabecera',
+            // ),
+            // _buildSection(
+            //   title: 'Comprobantes de Detalle',
+            //   items: _comprobantesDetalle,
+            //   isLoading: _isLoadingComprobantesDetalle,
+            //   onCrudPressed: () =>
+            //       _navigateToCrud(context, 'comprobante-detalle'),
+            //   idField: 'id_comprobante_detalle',
+            // ),
+            // _buildSection(
+            //   title: 'Pagos',
+            //   items: _pagos,
+            //   isLoading: _isLoadingPagos,
+            //   onCrudPressed: () => _navigateToCrud(context, 'pago'),
+            //   idField: 'id_pago',
+            // ),
+            // _buildSection(
+            //   title: 'Inventario',
+            //   items: _inventario,
+            //   isLoading: _isLoadingInventario,
+            //   onCrudPressed: () => _navigateToCrud(context, 'inventario'),
+            //   idField: 'id_inventario',
+            // ),
+            
           ],
         ),
       ),

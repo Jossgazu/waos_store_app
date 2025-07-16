@@ -119,8 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildPasswordField(),
                     const SizedBox(height: 24),
                     _buildLoginButton(),
-                    const SizedBox(height: 16),
-                    _buildForgotPasswordLink(),
+                    // const SizedBox(height: 16),
+                    // _buildForgotPasswordLink(),
                     const SizedBox(height: 30),
                     _buildDivider(),
                     const SizedBox(height: 20),
@@ -232,22 +232,22 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildForgotPasswordLink() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: () => Navigator.pushNamed(context, AppRoutes.recover),
-        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-        child: const Text(
-          '¿Olvidaste tu contraseña?',
-          style: TextStyle(
-            color: Colors.blueAccent,
-            decoration: TextDecoration.underline,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildForgotPasswordLink() {
+  //   return Align(
+  //     alignment: Alignment.centerRight,
+  //     child: TextButton(
+  //       onPressed: () => Navigator.pushNamed(context, AppRoutes.recover),
+  //       style: TextButton.styleFrom(padding: EdgeInsets.zero),
+  //       child: const Text(
+  //         '¿Olvidaste tu contraseña?',
+  //         style: TextStyle(
+  //           color: Colors.blueAccent,
+  //           decoration: TextDecoration.underline,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildDivider() {
     return Row(

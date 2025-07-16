@@ -50,18 +50,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Waos Store')),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
-        items: _bottomItems,
-        selectedItemColor: _getSelectedItemColor(_currentIndex),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-      ),
-    );
-  }
+Widget build(BuildContext context) {
+  return Scaffold(
+    // appBar: AppBar(
+      // title: const Text('DeliApi'),
+      // backgroundColor: Colors.cyan, 
+    // ),
+    body: _screens[_currentIndex],
+    bottomNavigationBar: BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: _onItemTapped,
+      items: _bottomItems,
+      selectedItemColor: _getSelectedItemColor(_currentIndex),
+      unselectedItemColor: Colors.black,
+      type: BottomNavigationBarType.fixed,
+    ),
+  );
+}
 }

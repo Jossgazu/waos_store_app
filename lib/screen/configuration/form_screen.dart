@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:waos_store_app/models/form_config.dart';
 import 'package:waos_store_app/models/form_field_config.dart';
-import 'package:waos_store_app/services/api_service.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:dio/dio.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart'; // Para detectar la plataforma
-import 'package:image_picker/image_picker.dart'; // Para móviles
-import 'package:file_selector/file_selector.dart'; // Para Linux
-
+import 'package:waos_store_app/services/api_service.dart'; // Asegúrate de que esta importación sea correcta
 
 class FormScreen extends StatefulWidget {
   final String title;
-
   final String endpoint;
-  
   final Map<String, dynamic>? initialData;
 
   const FormScreen({
@@ -35,211 +25,177 @@ class _FormScreenState extends State<FormScreen> {
   Map<String, dynamic> _formData = {};
   bool _isLoading = false;
   List<FormFieldConfig> _fieldConfigs = [];
-  XFile? _imageFile;
+  Map<String, List<Map<String, dynamic>>> _dropdownOptions = {};
 
   @override
-  void initState() {
-    super.initState();
-    // Configuración específica para Producto Variante
-    _fieldConfigs = [
-      FormFieldConfig(
-        field: 'nombre_variante',
-        label: 'Nombre de la Variante',
-        type: 'text',
-        required: true,
-      ),
-      FormFieldConfig(
-        field: 'precio_adicional',
-        label: 'Precio Adicional',
-        type: 'number',
-        hint: 'Ingrese el precio adicional de la variante',
-        required: true,
-      ),
-      FormFieldConfig(
-        field: 'imagen_variante',
-        label: 'Imagen de la Variante',
-        type: 'image',
-        required: false,
-      ),
-      FormFieldConfig(
-        field: 'activo',
-        label: 'Activo',
-        type: 'switch',
-        defaultValue: true,
-      ),
-    ];
+void initState() {
+  super.initState();
+  _fieldConfigs = FormConfig.getConfig(widget.endpoint) ?? [];
+  for (var config in _fieldConfigs) {
+    if (config.type == 'text' ||
+        config.type == 'textarea' ||
+        config.type == 'number' ||
+        config.type == 'phone' ||
+        config.type == 'password' ||      // <-- agrega esto
+        config.type == 'email') {         // <-- y esto
+      _controllers[config.field] = TextEditingController(
+        text: widget.initialData?[config.field]?.toString() ?? '',
+      );
+    }
+    _formData[config.field] =
+        widget.initialData?[config.field] ?? config.defaultValue;
+  }
+  _loadDropdownOptions();
+}
 
-    // Inicializar controladores y datos
-    for (var config in _fieldConfigs) {
-      if (config.type == 'text' || config.type == 'number') {
-        _controllers[config.field] = TextEditingController(
-          text: widget.initialData?[config.field]?.toString() ?? '',
-        );
-      }
-      _formData[config.field] =
-          widget.initialData?[config.field] ?? config.defaultValue;
+  Future<void> _loadDropdownOptions() async {
+  for (var config in _fieldConfigs.where((c) => c.type == 'dropdown')) {
+    String? entity = _getEntityFromField(config.field);
+    if (entity != null) {
+      final data = await ApiService.getData(entity);
+      setState(() {
+        _dropdownOptions[config.field] = data;
+      });
+    }
+  }
+}
+
+String? _getEntityFromField(String field) {
+  if (field.startsWith('fk_')) {
+    return field.substring(3).replaceAll('_', '-').toLowerCase();
+  }
+  if (field.startsWith('fk')) {
+    return field.substring(2).replaceAll('_', '-').toLowerCase();
+  }
+  return null;
+}
+
+  String _getIdFieldForEntity(String entity) {
+    // Puedes mejorar este mapeo según tus convenciones
+    switch (entity) {
+      case 'categoria':
+        return 'id_categoria';
+      case 'producto':
+        return 'id_producto';
+      case 'empresa':
+        return 'id_empresa';
+      case 'sucursal':
+        return 'id_sucursal';
+      case 'usuario':
+        return 'id_usuario';
+      // case 'rol':
+      //   return 'id_rol';
+      case 'proveedor':
+        return 'id_proveedor';
+      case 'metodo-pago':
+        return 'id_metodo_pago';
+      case 'comprobante-cabecera':
+        return 'id_comprobante_cabecera';
+      case 'comprobante-detalle':
+        return 'id_comprobante_detalle';
+      case 'pago':
+        return 'id_pago';
+      case 'inventario':
+        return 'id_inventario';
+      case 'producto-variante':
+        return 'id_producto_variante';
+      default:
+        return 'id';
     }
   }
 
   Widget _buildFormFields() {
     return Column(
       children: _fieldConfigs.map((config) {
-        if (config.type == 'image') {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    config.label,
-                    style: TextStyle(color: Colors.blueGrey[700]),
-                  ),
-                  const SizedBox(height: 8),
-                
-ElevatedButton(
-  onPressed: () async {
-    try {
-      if (kIsWeb || Platform.isLinux) {
-        final XTypeGroup typeGroup = XTypeGroup(
-          label: 'images',
-          extensions: ['jpg', 'jpeg', 'png'],
-        );
-        final XFile? pickedFile = await openFile(acceptedTypeGroups: [typeGroup]);
-        if (pickedFile != null) {
-          setState(() {
-            _imageFile = pickedFile;
-          });
-        }
-      } else if (Platform.isAndroid || Platform.isIOS) {
-        final pickedFile = await ImagePicker().pickImage(
-          source: ImageSource.gallery,
-          imageQuality: 80,
-        );
-        if (pickedFile != null) {
-          setState(() {
-            _imageFile = pickedFile;
-          });
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La selección de imágenes no está soportada en esta plataforma.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.blueAccent,
-    foregroundColor: Colors.white,
-  ),
-  child: const Text('Seleccionar Imagen'),
-),
-                  const SizedBox(height: 8),
-                  if (_imageFile != null)
-                    Image.file(
-                      File(_imageFile!.path),
-                      height: 100,
-                      fit: BoxFit.cover,
-                    )
-                  else if (_formData['imagen_variante'] != null && 
-                          _formData['imagen_variante'] is String)
-                    Image.network(
-                      _formData['imagen_variante'],
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.broken_image, size: 100);
-                      },
-                    ),
-                ],
-              ),
-            ),
-          );
-        }
+        if (config.type == 'dropdown') {
+          final entity = _getEntityFromField(config.field);
+          final options = config.options ?? _dropdownOptions[config.field] ?? [];
+  final idField = config.options != null ? 'value' : (entity != null ? _getIdFieldForEntity(entity) : 'id');
+  final labelField = config.options != null ? 'label' : 'nombre';
 
-        if (config.type == 'text' || config.type == 'number') {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: TextFormField(
-                controller: _controllers[config.field],
-                decoration: InputDecoration(
-                  labelText: config.label,
-                  hintText: config.hint,
-                  border: InputBorder.none,
-                  labelStyle: TextStyle(color: Colors.blueGrey[700]),
-                ),
-                style: const TextStyle(color: Colors.blueGrey),
-                keyboardType: config.type == 'number'
-                    ? TextInputType.numberWithOptions(decimal: true)
-                    : TextInputType.text,
-                validator: (value) {
-                  if (config.required && (value == null || value.isEmpty)) {
-                    return '${config.label} es obligatorio';
-                  }
-                  if (config.type == 'number' && value != null && value.isNotEmpty) {
-                    if (double.tryParse(value) == null) {
-                      return 'Ingrese un número válido';
-                    }
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  if (config.type == 'number') {
-                    _formData[config.field] = (value == null || value.isEmpty)
-                        ? 0.0
-                        : double.tryParse(value);
-                  } else {
-                    _formData[config.field] = value;
-                  }
-                },
-              ),
-            ),
-          );
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: DropdownButtonFormField<dynamic>(
+      value: _formData[config.field],
+      decoration: InputDecoration(
+        labelText: config.label,
+        border: const OutlineInputBorder(),
+      ),
+      items: options.map<DropdownMenuItem<dynamic>>((item) {
+        return DropdownMenuItem(
+          value: item[idField],
+          child: Text(item[labelField] ?? item['descripcion'] ?? item[idField].toString()),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _formData[config.field] = value;
+        });
+      },
+      validator: (value) {
+        if (config.required && (value == null || value.toString().isEmpty)) {
+          return '${config.label} es obligatorio';
         }
-
+        return null;
+      },
+    ),
+  );
+}
+        // ...otros tipos de campos...
+        // ...existing code...
+if (config.type == 'text' ||
+    config.type == 'textarea' ||
+    config.type == 'number' ||
+    config.type == 'phone' ||
+    config.type == 'password' || // <--- agrega esto
+    config.type == 'email') {    // <--- y esto
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: TextFormField(
+      controller: _controllers[config.field],
+      decoration: InputDecoration(
+        labelText: config.label,
+        hintText: config.hint,
+        border: const OutlineInputBorder(),
+      ),
+      maxLines: config.type == 'textarea' ? 3 : 1,
+      obscureText: config.type == 'password', // <--- para ocultar contraseña
+      keyboardType: config.type == 'number'
+          ? TextInputType.number
+          : config.type == 'phone'
+              ? TextInputType.phone
+              : config.type == 'email'
+                  ? TextInputType.emailAddress
+                  : TextInputType.text,
+      validator: (value) {
+        if (config.required && (value == null || value.isEmpty)) {
+          return '${config.label} es obligatorio';
+        }
+        return null;
+      },
+      onSaved: (value) {
+        if (config.type == 'number') {
+          _formData[config.field] = (value == null || value.isEmpty)
+              ? 0
+              : double.tryParse(value);
+        } else {
+          _formData[config.field] = value;
+        }
+      },
+    ),
+  );
+}
         if (config.type == 'switch') {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: SwitchListTile(
-              title: Text(
-                config.label,
-                style: TextStyle(color: Colors.blueGrey[700]),
-              ),
-              value: _formData[config.field] ?? config.defaultValue ?? false,
-              onChanged: (value) {
-                setState(() {
-                  _formData[config.field] = value;
-                });
-              },
-            ),
+          return SwitchListTile(
+            title: Text(config.label),
+            value: _formData[config.field] ?? config.defaultValue ?? false,
+            onChanged: (value) {
+              setState(() {
+                _formData[config.field] = value;
+              });
+            },
           );
         }
-
         return const SizedBox.shrink();
       }).toList(),
     );
@@ -249,41 +205,16 @@ ElevatedButton(
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
     setState(() => _isLoading = true);
-
     try {
-      final formData = FormData();
-
-      // Agregar campos normales
-      formData.fields.addAll(
-        _formData.entries
-            .where((entry) => entry.key != 'imagen_variante')
-            .map((entry) => MapEntry(entry.key, entry.value.toString())),
-      );
-
-      // Agregar imagen si existe
-      if (_imageFile != null) {
-        formData.files.add(MapEntry(
-          'imagen_variante',
-          await MultipartFile.fromFile(
-            _imageFile!.path,
-            filename: 'variante_${DateTime.now().millisecondsSinceEpoch}.jpg',
-          ),
-        ));
-      }
-
       await ApiService.save(
         widget.endpoint,
-        widget.initialData?['id_producto_variante'],
-        formData as Map<String, dynamic>,
+        widget.initialData?['id'],
+        _formData,
       );
-      
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(e.toString())),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -292,69 +223,42 @@ ElevatedButton(
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        centerTitle: true,
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.blueAccent.withOpacity(0.1),
-              Colors.grey[50]!,
-            ],
-          ),
+    if (_fieldConfigs.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.title)),
+        body: const Center(
+          child: Text('Configuración de formulario no encontrada'),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                _buildFormFields(),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                    backgroundColor: Colors.blueAccent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Guardar',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.title)),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              _buildFormFields(),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
                 ),
-              ],
-            ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(),
+                      )
+                    : const Text('Guardar'),
+              ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controllers.forEach((key, controller) => controller.dispose());
-    super.dispose();
   }
 }

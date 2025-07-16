@@ -198,150 +198,142 @@ class _CrudScreenState extends State<CrudScreen> {
                 )
               else
                 Expanded(
-  child: ListView.builder(
-    itemCount: _items.length,
-    itemBuilder: (_, i) {
-      final item = _items[i];
-      final id = item[idField];
-      final name = item['nombre'] ?? 'Sin nombre';
-      final description = item['descripcion'] ?? '';
-      final isActive = item['activo'] ?? false;
-      final imageUrl = item['imagen_url']; // Campo de la imagen
+                  child: ListView.builder(
+                    itemCount: _items.length,
+                    itemBuilder: (_, i) {
+                      final item = _items[i];
+                      final id = item[idField];
+                      final name = item['nombre'] ?? 'Sin nombre';
+                      final description = item['descripcion'] ?? '';
+                      final isActive = item['activo'] ?? false;
 
-      return Card(
-        elevation: 2,
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-          leading: imageUrl != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image, size: 50);
-                    },
-                  ),
-                )
-              : const Icon(Icons.image_not_supported, size: 50),
-          title: Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (description.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: 4,
-                    bottom: 4,
-                  ),
-                  child: Text(
-                    description,
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                ),
-              Text(
-                'ID: $id',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    'Estado: ',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
-                  ),
-                  Icon(
-                    isActive ? Icons.check_circle : Icons.cancel,
-                    color: isActive ? Colors.green : Colors.red,
-                    size: 16,
-                  ),
-                  Text(
-                    isActive ? 'Activo' : 'Inactivo',
-                    style: TextStyle(
-                      color: isActive ? Colors.green : Colors.red,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.edit,
-                  color: Colors.blue,
-                ),
-                onPressed: id != null ? () => _goToEditForm(id, item) : null,
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.delete,
-                  color: Colors.red,
-                ),
-                onPressed: id != null
-                    ? () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text(
-                              'Confirmar eliminación',
-                            ),
-                            content: Text(
-                              '¿Estás seguro de eliminar "$name"?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  _deleteItem(id);
-                                },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.red,
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          title: Text(
+                            name,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (description.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 4,
+                                    bottom: 4,
+                                  ),
+                                  child: Text(
+                                    description,
+                                    style: TextStyle(color: Colors.grey[700]),
+                                  ),
                                 ),
-                                child: const Text('Eliminar'),
+                              Text(
+                                'ID: $id',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Estado: ',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Icon(
+                                    isActive
+                                        ? Icons.check_circle
+                                        : Icons.cancel,
+                                    color: isActive ? Colors.green : Colors.red,
+                                    size: 16,
+                                  ),
+                                  Text(
+                                    isActive ? 'Activo' : 'Inactivo',
+                                    style: TextStyle(
+                                      color: isActive
+                                          ? Colors.green
+                                          : Colors.red,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                           ),
-                        );
-                      }
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  ),
-)
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.blue,
+                                ),
+                                onPressed: id != null
+                                    ? () => _goToEditForm(id, item)
+                                    : null,
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
+                                onPressed: id != null
+                                    ? () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            title: const Text(
+                                              'Confirmar eliminación',
+                                            ),
+                                            content: Text(
+                                              '¿Estás seguro de eliminar "$name"?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context).pop(),
+                                                child: const Text('Cancelar'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  _deleteItem(id);
+                                                },
+                                                style: TextButton.styleFrom(
+                                                  foregroundColor: Colors.red,
+                                                ),
+                                                child: const Text('Eliminar'),
+                                              ),
+                                            ],
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),

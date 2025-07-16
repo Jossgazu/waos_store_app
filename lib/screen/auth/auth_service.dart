@@ -47,14 +47,14 @@ class AuthService {
       String dni, String email, String password, String nombre) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/'),
+        Uri.parse('$_baseUrl/usuario/'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'dni': dni,
           'correo': email,
           'password': password,
           'nombre': nombre,
-          'rol': 'cliente', // Rol por defecto para nuevos usuarios
+          'rol': 'cliente', 
         }),
       );
 

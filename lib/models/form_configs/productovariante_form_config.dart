@@ -22,21 +22,14 @@ class ProductoVarianteFormConfig {
         label: 'Producto',
         type: 'dropdown',
         required: true,
-        hint: 'Seleccione un producto',
+        hint: 'Seleccione el producto al que pertenece',
       ),
       FormFieldConfig(
         field: 'activo',
         label: 'Activo',
         type: 'switch',
-        required: true,
-        defaultValue: true,
-      ),
-      FormFieldConfig(
-        field: 'imagen',
-        label: 'Imagen de la Variante',
-        type: 'image',
         required: false,
-        hint: 'Seleccione una imagen para la variante',
+        defaultValue: true,
       ),
     ];
   }

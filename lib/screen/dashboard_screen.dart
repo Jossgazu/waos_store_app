@@ -153,13 +153,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Colors.greenAccent,
                         ),
                         _buildStatCard(
-                          'Ingresos Mes',
+                          'Ventas Mes',
                           _dashboardData['ingresosMes']?['total_ingresos'] ?? 0.0,
                           Icons.monetization_on,
                           Colors.orangeAccent,
                         ),
                         _buildStatCard(
-                          'Ingresos Totales',
+                          'Ventas Año',
                           _dashboardData['ingresosTotales']?['ingresos_totales'] ?? 0.0,
                           Icons.attach_money,
                           Colors.purpleAccent,
@@ -181,6 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             const Text(
                               'Ventas Último Año',
+                              // 'Ventas Última Semana',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -383,13 +384,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       'Vendidos: ${producto['total_vendido'] ?? 0}',
                                       style: const TextStyle(fontSize: 12),
                                     ),
-                                    trailing: Text(
-                                      'S/${(producto['total_ventas'] ?? 0.0).toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.greenAccent,
-                                      ),
-                                    ),
+                                    // trailing: Text(
+                                    //   'S/${(producto['total_ventas'] ?? 0.0).toStringAsFixed(2)}',
+                                    //   style: const TextStyle(
+                                    //     fontWeight: FontWeight.bold,
+                                    //     color: Colors.greenAccent,
+                                    //   ),
+                                    // ),
                                   );
                                 },
                               ),
